@@ -1,14 +1,17 @@
 use crate::routes::{handler_404, health_check};
 use axum::{routing::get, Router};
+use sqlx::PgPool;
 use tokio::net::TcpListener;
 
-pub async fn run(listener: TcpListener) {
-    axum::serve(listener, init_app()).await.unwrap();
+pub async fn run(listener: TcpListener, conn_pool: PgPool) {
+    axum::serve(listener, init_app(conn_pool)).await.unwrap();
 }
 
-pub fn init_app() -> Router {
+pub fn init_app(conn_pool: PgPool) -> Router {
     // Initialize application
-    let app = Router::new().route("/health_check", get(health_check));
+    let app = Router::new()
+        .route("/health_check", get(health_check))
+        .with_state(conn_pool);
 
     // Add fallback for invalid routes
     app.fallback(handler_404)
