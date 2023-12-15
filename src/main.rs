@@ -1,18 +1,13 @@
-use axum::{routing::get, Router};
+use tokio::net::TcpListener;
+use vcapp::init::run;
 
 #[tokio::main]
-async fn main() {
-    // Build the application with one route
-    let app = Router::new().route("/", get(root));
+async fn main() -> std::io::Result<()> {
+    // Bind address with tokio
+    let listener = TcpListener::bind("0.0.0.0:7777").await?;
 
-    // Run app instance with hyper
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:8080")
-        .await
-        .unwrap();
-    axum::serve(listener, app).await.unwrap();
-}
+    // Call the run function form init
+    run(listener).await;
 
-// Handler to return a simple Hello World
-async fn root() -> &'static str {
-    "Hello, World!"
+    Ok(())
 }
