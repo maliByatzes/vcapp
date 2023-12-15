@@ -18,6 +18,7 @@ async fn main() -> std::io::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    // Initialize configuration
     let config = init_configuration().expect("Failed to load configuration.");
     let connection_str = config.database.connection_string();
 

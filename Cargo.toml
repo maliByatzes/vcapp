@@ -25,6 +25,5 @@ sqlx = { version = "0.7", features = [
 ] }
 serde = "1.0.193"
 config = "0.13.4"
-
-[dev-dependencies]
+askama = "0.12.1"
 tower = { version = "0.4", features = ["util"] }
