@@ -14,5 +14,6 @@ name = "vcapp"
 [dependencies]
 axum = "0.7.2"
 tokio = { version = "1.35.0", features = ["full"] }
-tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tower-http = { version = "0.5.0", features = ["trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
