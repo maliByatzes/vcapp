@@ -27,3 +27,4 @@ serde = "1.0.193"
 config = "0.13.4"
 askama = "0.12.1"
 tower = { version = "0.4", features = ["util"] }
+uuid = { version = "1.6.1", features = ["v4"] }

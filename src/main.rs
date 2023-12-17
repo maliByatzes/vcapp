@@ -20,19 +20,17 @@ async fn main() -> std::io::Result<()> {
 
     // Initialize configuration
     let config = init_configuration().expect("Failed to load configuration.");
-    let connection_str = config.database.connection_string();
 
     // Set up connection pool
     let conn_pool = PgPoolOptions::new()
         .max_connections(5)
         .acquire_timeout(Duration::from_secs(5))
-        .connect(&connection_str)
-        .await
-        .expect("Failed to connect to database.");
+        .connect_lazy_with(config.database.with_db());
 
     // Bind address with tokio
     let listener = TcpListener::bind(format!("0.0.0.0:{}", config.application_port)).await?;
 
+    tracing::debug!("Server running on port {}", config.application_port);
     // Call the run function from init
     run(listener, conn_pool).await;
 

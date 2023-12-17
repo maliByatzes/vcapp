@@ -1,3 +1,5 @@
+use sqlx::postgres::PgConnectOptions;
+
 #[derive(serde::Deserialize)]
 pub struct Settings {
     pub database: DatabaseSettings,
@@ -13,12 +15,19 @@ pub struct DatabaseSettings {
     pub db_name: String,
 }
 
+// Return PgConnectOptions instead of conection string directly
 impl DatabaseSettings {
-    pub fn connection_string(&self) -> String {
-        format!(
-            "postgres://{}:{}@{}:{}/{}",
-            self.username, self.password, self.host, self.port, self.db_name
-        )
+    pub fn without_db(&self) -> PgConnectOptions {
+        PgConnectOptions::new()
+            .host(&self.host)
+            .username(&self.username)
+            .password(&self.password)
+            .port(self.port)
+    }
+
+    pub fn with_db(&self) -> PgConnectOptions {
+        // Add a database to the `without_db` PgConnectOptions
+        self.without_db().database(&self.db_name)
     }
 }
 
