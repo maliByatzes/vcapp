@@ -24,7 +24,7 @@ where
             Ok(html) => Html(html).into_response(),
             Err(e) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Faile to render template. Error: {}", e),
+                format!("Failed to render template. Error: {}", e),
             )
                 .into_response(),
         }
