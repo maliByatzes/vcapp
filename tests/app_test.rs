@@ -22,7 +22,7 @@ pub async fn config_database(config: &DatabaseSettings) -> PgPool {
 
     let connection_pool = PgPool::connect_with(config.with_db())
         .await
-        .expect("Failed to connect to postgres 2");
+        .expect("Failed to connect to postgres");
 
     // Migrate database
     sqlx::migrate!("./migrations")
