@@ -2,6 +2,7 @@ use axum::body::Body;
 use axum::http::Request;
 use axum::http::StatusCode;
 use axum::Router;
+use http_body_util::BodyExt;
 use sqlx::PgPool;
 use tower::ServiceExt;
 use vcapp::config::init_configuration;
@@ -63,4 +64,31 @@ async fn health_check_works() {
         .unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn handler_404_works() {
+    let test_cases = vec![
+        "invalid_route",
+        "very_very_very_invalid_route",
+        "oddsbchjff",
+    ];
+
+    for route in test_cases {
+        let app = spawn_app().await;
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri(format!("/{}", route))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        assert_eq!(&body[..], b"Invalid route, nothing here.");
+    }
 }
