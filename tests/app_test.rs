@@ -1,26 +1,28 @@
-use uuid::Uuid;
-
 use axum::body::Body;
 use axum::http::Request;
 use axum::http::StatusCode;
 use axum::Router;
-use sqlx::{Executor, PgPool};
+use sqlx::PgPool;
 use tower::ServiceExt;
 use vcapp::config::init_configuration;
 use vcapp::config::DatabaseSettings;
 use vcapp::init::init_app;
 
 pub async fn config_database(config: &DatabaseSettings) -> PgPool {
-    // Connect to postgres without database
-    let connection_pool = PgPool::connect_with(config.without_db())
-        .await
-        .expect("Failed to connect to postgres");
+    // // Connect to postgres without database
+    // let mut connection = PgConnection::connect_with(&config.without_db())
+    //     .await
+    //     .expect("Failed to connect to postgres 1");
+    //
+    // // Create a database with db_name
+    // connection
+    //     .execute(&*format!(r#"create database "{}";"#, config.db_name))
+    //     .await
+    //     .expect("Failed to create a database");
 
-    // Create a database with db_name
-    connection_pool
-        .execute(&*format!(r#"create database "{}";"#, config.db_name))
+    let connection_pool = PgPool::connect_with(config.with_db())
         .await
-        .expect("Failed to create a database");
+        .expect("Failed to connect to postgres 2");
 
     // Migrate database
     sqlx::migrate!("./migrations")
@@ -38,8 +40,9 @@ async fn spawn_app() -> Router {
     // let port = listener.local_addr().unwrap().port();
     // let address = format!("http://127.0.0.1:{}", port);
 
-    let mut config = init_configuration().expect("Failed to load configuration");
-    config.database.db_name = Uuid::new_v4().to_string();
+    let config = init_configuration().expect("Failed to load configuration");
+    // config.database.db_name = Uuid::new_v4().to_string();
+    // println!("{:?}", config);
     let connection_pool = config_database(&config.database).await;
 
     init_app(connection_pool)

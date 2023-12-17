@@ -21,6 +21,8 @@ async fn main() -> std::io::Result<()> {
     // Initialize configuration
     let config = init_configuration().expect("Failed to load configuration.");
 
+    // println!("{:?}", config);
+
     // Set up connection pool
     let conn_pool = PgPoolOptions::new()
         .max_connections(5)
