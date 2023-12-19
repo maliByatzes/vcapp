@@ -7,7 +7,11 @@
 // Insert Data to the database
 // Process return status**
 
-use crate::models::NewUser;
+use crate::{
+    errors::RegisterError,
+    models::NewUser,
+    validation::{UserEmail, UserPassword, UserUsername},
+};
 
 #[derive(Debug, serde::Deserialize)]
 pub struct RegisterData {
@@ -18,4 +22,19 @@ pub struct RegisterData {
 }
 
 // Parse new user to a NewUser struct
-// pub fn parse_new_user(form: RegisterData) -> Result<NewUser, String> {}
+pub fn parse_new_user(form: RegisterData) -> Result<NewUser, RegisterError> {
+    let email = UserEmail::parse(form.email)?;
+    let password = UserPassword::parse(form.password)?;
+    let password_confirmation = UserPassword::parse(form.password_confirmation)?;
+    let username = UserUsername::parse(form.username)?;
+
+    if password != password_confirmation {
+        return Err(RegisterError::PasswordMismatch);
+    }
+
+    Ok(NewUser {
+        email,
+        password,
+        username,
+    })
+}

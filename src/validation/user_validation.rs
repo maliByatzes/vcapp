@@ -2,17 +2,19 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use validator::validate_email;
 
+use crate::errors::RegisterError;
+
 // Validate user's email
 #[derive(Debug)]
 pub struct UserEmail(String);
 
 impl UserEmail {
-    pub fn parse(s: String) -> Result<UserEmail, String> {
+    pub fn parse(s: String) -> Result<String, RegisterError> {
         // Using validate_email should suffice for now
         if validate_email(&s) {
-            Ok(Self(s))
+            Ok(s)
         } else {
-            Err(format!("{} is not a valid email address.", s))
+            Err(RegisterError::EmailInvalid)
         }
     }
 }
@@ -29,11 +31,11 @@ static PASSWORD_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$").unwrap()
 });
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct UserPassword(String);
 
 impl UserPassword {
-    pub fn parse(s: String) -> Result<UserPassword, String> {
+    pub fn parse(s: String) -> Result<String, RegisterError> {
         // Requirements:
         // Not empty
         // Min length of 8 chars
@@ -45,10 +47,16 @@ impl UserPassword {
         let is_too_long = s.chars().count() > 256;
         let is_match = PASSWORD_REGEX.is_match(&s);
 
-        if is_empty_or_ws || is_too_short || is_too_long || is_match {
-            Err(format!("{} is not valid password.", s))
+        if is_empty_or_ws {
+            Err(RegisterError::PasswordEmpty)
+        } else if is_too_short {
+            Err(RegisterError::PasswordTooShort)
+        } else if is_too_long {
+            Err(RegisterError::PassowrdTooLong)
+        } else if is_match {
+            Err(RegisterError::PasswordNotMatch)
         } else {
-            Ok(Self(s))
+            Ok(s)
         }
     }
 }
@@ -58,7 +66,7 @@ impl UserPassword {
 pub struct UserUsername(String);
 
 impl UserUsername {
-    pub fn parse(s: String) -> Result<UserUsername, String> {
+    pub fn parse(s: String) -> Result<String, RegisterError> {
         // Requirements
         // Not empty
         // Min length of 6 chars
@@ -68,10 +76,14 @@ impl UserUsername {
         let is_too_short = s.chars().count() < 6;
         let is_too_long = s.chars().count() > 256;
 
-        if is_empty_or_ws || is_too_short || is_too_long {
-            Err(format!("{} is not valid username.", s))
+        if is_empty_or_ws {
+            Err(RegisterError::UsernameEmpty)
+        } else if is_too_short {
+            Err(RegisterError::UsernameTooShort)
+        } else if is_too_long {
+            Err(RegisterError::UsernameTooLong)
         } else {
-            Ok(Self(s))
+            Ok(s)
         }
     }
 }
