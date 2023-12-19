@@ -1,5 +1,3 @@
-use once_cell::sync::Lazy;
-use regex::Regex;
 use validator::validate_email;
 
 use crate::errors::RegisterError;
@@ -26,10 +24,10 @@ impl AsRef<str> for UserEmail {
 }
 
 // Validate user's password
-
-static PASSWORD_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$").unwrap()
-});
+// WARNING: ABOLISH THE REGEX AND FIND ANOTHER WAY TO VALIDATE THE PASSWORD
+// static PASSWORD_REGEX: Lazy<Regex> = Lazy::new(|| {
+// Regex::new(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$").unwrap()
+// });
 
 #[derive(Debug, PartialEq)]
 pub struct UserPassword(String);
@@ -45,7 +43,6 @@ impl UserPassword {
         let is_empty_or_ws = s.trim().is_empty();
         let is_too_short = s.chars().count() < 8;
         let is_too_long = s.chars().count() > 256;
-        let is_match = PASSWORD_REGEX.is_match(&s);
 
         if is_empty_or_ws {
             Err(RegisterError::PasswordEmpty)
@@ -53,8 +50,6 @@ impl UserPassword {
             Err(RegisterError::PasswordTooShort)
         } else if is_too_long {
             Err(RegisterError::PassowrdTooLong)
-        } else if is_match {
-            Err(RegisterError::PasswordNotMatch)
         } else {
             Ok(s)
         }

@@ -28,7 +28,11 @@ async fn main() -> std::io::Result<()> {
         .connect_lazy_with(config.database.with_db());
 
     // Migrate the database
-    if let Err(_) = sqlx::migrate!("./migrations").run(&conn_pool).await {
+    if sqlx::migrate!("./migrations")
+        .run(&conn_pool)
+        .await
+        .is_err()
+    {
         tracing::error!("Failed to perfom migrations."); // TODO: Do better
     };
 

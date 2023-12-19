@@ -14,7 +14,9 @@ pub enum RegisterError {
     UsernameEmpty,
     UsernameTooShort,
     UsernameTooLong,
-    DatabaseError(String),
+    BadForm,
+    HashError(anyhow::Error),
+    DatabaseError(sqlx::Error),
 }
 
 impl IntoResponse for RegisterError {
@@ -53,18 +55,26 @@ impl IntoResponse for RegisterError {
             RegisterError::UsernameEmpty => {
                 (StatusCode::BAD_REQUEST, Json("Username is empty.")).into_response()
             }
-            RegisterError::UsernameTooShort => (
+            RegisterError::UsernameTooShort => { (
                 StatusCode::BAD_REQUEST,
                 Json("Username is too short. Usernames must at least 6 characters long."),
             )
-                .into_response(),
-            RegisterError::UsernameTooLong => (
+                .into_response()
+            }
+            RegisterError::UsernameTooLong => { (
                 StatusCode::BAD_REQUEST,
                 Json("Username is too long. Usernames must be less 256 characters."),
             )
-                .into_response(),
-            RegisterError::DatabaseError(message) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, Json(message)).into_response()
+                .into_response()
+            }
+            RegisterError::BadForm => {
+                (StatusCode::BAD_REQUEST, Json("Failed to process form input")).into_response()
+            }
+            RegisterError::HashError(e) => {
+                (StatusCode::BAD_REQUEST, Json(format!("{}",e))).into_response()
+            }
+            RegisterError::DatabaseError(err) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, Json(err.to_string())).into_response()
             }
         }
     }
