@@ -21,13 +21,16 @@ async fn main() -> std::io::Result<()> {
     // Initialize configuration
     let config = init_configuration().expect("Failed to load configuration.");
 
-    // println!("{:?}", config);
-
     // Set up connection pool
     let conn_pool = PgPoolOptions::new()
         .max_connections(5)
         .acquire_timeout(Duration::from_secs(5))
         .connect_lazy_with(config.database.with_db());
+
+    // Migrate the database
+    if let Err(_) = sqlx::migrate!("./migrations").run(&conn_pool).await {
+        tracing::error!("Failed to perfom migrations."); // TODO: Do better
+    };
 
     // Bind address with tokio
     let listener = TcpListener::bind(format!("0.0.0.0:{}", config.application_port)).await?;
