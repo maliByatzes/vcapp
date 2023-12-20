@@ -1,17 +1,10 @@
-// Create a new user - Steps
-// Recieve form data in "html query" format, e.g: `name=..&password=...&username=...`
-// Parse the form data to relevant fields of NewUser struct
-// Data validation**
-// Check for duplicates for unique fields
-// Hash the password before storing
-// Insert Data to the database
-// Process return status**
-
 use axum::{http::StatusCode, Extension, Json};
-use sqlx::PgPool;
+use axum_macros::debug_handler;
+use std::sync::Arc;
 
 use crate::{
     errors::RegisterError,
+    init::AppState,
     models::NewUser,
     validation::{UserEmail, UserPassword, UserUsername},
 };
@@ -44,16 +37,17 @@ pub fn parse_new_user(form: RegisterData) -> Result<NewUser, RegisterError> {
 
 // Register a new user
 // NOTE: Return `Redirect` instead of () later
+#[debug_handler]
 pub async fn register_user(
+    state: Extension<Arc<AppState>>,
     Json(req): Json<RegisterData>,
-    db_pool: Extension<PgPool>,
-) -> Result<StatusCode, RegisterError> {
-    let new_user = parse_new_user(req)?;
+) -> StatusCode {
+    let new_user = parse_new_user(req).unwrap();
 
     // Hash password
     let hashed_password = match crate::utils::hash(new_user.password).await {
         Ok(hs) => hs,
-        Err(e) => return Err(RegisterError::HashError(e)),
+        Err(_) => return StatusCode::BAD_REQUEST,
     };
 
     match sqlx::query!(
@@ -65,12 +59,12 @@ pub async fn register_user(
         hashed_password,
         new_user.username,
     )
-    .execute(&*db_pool)
+    .execute(&*state.pool)
     .await
     {
         Ok(_) => (),
-        Err(e) => return Err(RegisterError::DatabaseError(e)),
+        Err(_) => return StatusCode::BAD_REQUEST,
     };
 
-    Ok(StatusCode::OK)
+    StatusCode::OK
 }
